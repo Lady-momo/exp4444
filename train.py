@@ -11,6 +11,7 @@ from tqdm import tqdm
 import numpy as np
 
 import wandb
+wandb_api_key=f81047d349aa9e43aa7e3a93cf03be0e20997131
 from evaluate import evaluate
 from unet import UNet
 from utils.data_loading import BasicDataset
@@ -20,6 +21,7 @@ dir_img = Path('/kaggle/input/exp4444/实验四/Pytorch-UNet-master/data/test/im
 dir_mask = Path('/kaggle/input/exp4444/实验四/Pytorch-UNet-master/data/test/mask/')
 dir_checkpoint = Path('/kaggle/input/exp4444/实验四/Pytorch-UNet-master/checkpoints/')
 
+wandb.login(key="wandb_api_key")
 def train_model(
         fold,
         model,
