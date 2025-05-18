@@ -21,7 +21,7 @@ dir_img = Path('/kaggle/input/exp4444/实验四/Pytorch-UNet-master/data/test/im
 dir_mask = Path('/kaggle/input/exp4444/实验四/Pytorch-UNet-master/data/test/mask/')
 dir_checkpoint = Path('/kaggle/input/exp4444/实验四/Pytorch-UNet-master/checkpoints/')
 
-wandb.login(key = "wandb_api_key")
+wandb.login(key = wandb_api_key)
 def train_model(
         fold,
         model,
