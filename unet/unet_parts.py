@@ -1,0 +1,98 @@
+""" Parts of the U-Net model """
+
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
+
+class DoubleConv(nn.Module):
+    """(convolution => [BN] => ReLU) * 2"""
+
+    def __init__(self, in_channels, out_channels, mid_channels=None):
+        super().__init__()
+        # TODO 完成基础卷积结构：卷积->BN层->ReLU->卷积->BN层->ReLU,变量名可以自行设置，也可以延用已提供的变量名
+        if not mid_channels:
+            mid_channels = out_channels
+        self.double_conv = nn.Sequential(
+            nn.Conv2d(in_channels, mid_channels, kernel_size=3, padding=1),
+            nn.BatchNorm2d(mid_channels),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(mid_channels, out_channels, kernel_size=3, padding=1),
+            nn.BatchNorm2d(out_channels),
+            nn.ReLU(inplace=True)
+        )
+
+    def forward(self, x):
+        return self.double_conv(x)
+
+class Down(nn.Module):
+    """Downscaling with maxpool then double conv"""
+
+    def __init__(self, in_channels, out_channels):
+        super().__init__()
+
+        # TODO 推荐使用nn.Maxpool2d()，并调用上述以及定义的DoubleConv()完成下采样操作;变量名可以自行设置，也可以延用已提供的变量名
+        self.maxpool_conv = nn.Sequential(
+            nn.MaxPool2d(2),
+            DoubleConv(in_channels, out_channels)
+        )
+
+        # TODO 需要考虑添加注意力机制，注意力机制包括但不限于空间注意力机制、通道注意力机制。
+        self.ca = nn.Sequential(
+            nn.AdaptiveAvgPool2d(1),
+            nn.Conv2d(out_channels, out_channels//8, 1),
+            nn.ReLU(),
+            nn.Conv2d(out_channels//8, out_channels, 1),
+            nn.Sigmoid()
+        )
+
+    def forward(self, x):
+        x = self.maxpool_conv(x)
+        ca_weight = self.ca(x)
+        return x * ca_weight
+
+
+class Up(nn.Module):
+    """Upscaling then double conv"""
+
+    def __init__(self, in_channels, out_channels, bilinear=True):
+        super().__init__()
+        # TODO 推荐使用nn.Upsample()，并调用上述以及定义的DoubleConv()完成上采样操作;变量名可以自行设置，也可以延用已提供的变量名
+        if bilinear:
+            self.up = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True)
+            self.conv = DoubleConv(in_channels, out_channels, in_channels//2)
+        else:
+            self.up = nn.ConvTranspose2d(in_channels, in_channels//2, kernel_size=2, stride=2)
+            self.conv = DoubleConv(in_channels, out_channels)
+
+        # TODO 需要考虑添加注意力机制，注意力机制包括但不限于空间注意力机制、通道注意力机制。
+        self.sa = nn.Sequential(
+            nn.Conv2d(2, 1, kernel_size=7, padding=3),
+            nn.Sigmoid()
+        )
+
+    def forward(self, x1, x2):
+        x1 = self.up(x1)
+        # Handle dimension mismatch
+        diffY = x2.size()[2] - x1.size()[2]
+        diffX = x2.size()[3] - x1.size()[3]
+        x1 = F.pad(x1, [diffX // 2, diffX - diffX // 2,
+                        diffY // 2, diffY - diffY // 2])
+
+        # Spatial attention
+        avg_out = torch.mean(x1, dim=1, keepdim=True)
+        max_out, _ = torch.max(x1, dim=1, keepdim=True)
+        sa = self.sa(torch.cat([avg_out, max_out], dim=1))
+        x1 = x1 * sa
+
+        x = torch.cat([x2, x1], dim=1)
+        return self.conv(x)
+
+class OutConv(nn.Module):
+    def __init__(self, in_channels, out_channels):
+        super(OutConv, self).__init__()
+        self.conv = nn.Conv2d(in_channels, out_channels, kernel_size=1)
+
+    def forward(self, x):
+        return self.conv(x)
+    
