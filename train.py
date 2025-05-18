@@ -11,7 +11,7 @@ from tqdm import tqdm
 import numpy as np
 
 import wandb
-wandb_api_key = f81047d349aa9e43aa7e3a93cf03be0e20997131
+wandb_api_key = 'f81047d349aa9e43aa7e3a93cf03be0e20997131'
 from evaluate import evaluate
 from unet import UNet
 from utils.data_loading import BasicDataset
