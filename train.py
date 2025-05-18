@@ -16,9 +16,9 @@ from unet import UNet
 from utils.data_loading import BasicDataset
 
 
-dir_img = Path('./data/train/img')
-dir_mask = Path('./data/train/mask/')
-dir_checkpoint = Path('./checkpoints/')
+dir_img = Path('/kaggle/input/exp4444/实验四/Pytorch-UNet-master/data/test/img')
+dir_mask = Path('/kaggle/input/exp4444/实验四/Pytorch-UNet-master/data/test/mask/')
+dir_checkpoint = Path('/kaggle/input/exp4444/实验四/Pytorch-UNet-master/checkpoints/')
 
 def train_model(
         fold,
