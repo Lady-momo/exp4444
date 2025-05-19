@@ -19,7 +19,7 @@ from utils.data_loading import BasicDataset
 
 dir_img = Path('/kaggle/input/exp4444/实验四/Pytorch-UNet-master/data/test/img')
 dir_mask = Path('/kaggle/input/exp4444/实验四/Pytorch-UNet-master/data/test/mask/')
-dir_checkpoint = Path('/kaggle/working/checkpoints/')
+dir_checkpoint = Path('/kaggle/output/checkpoints/')
 
 wandb.login(key = wandb_api_key)
 def train_model(
