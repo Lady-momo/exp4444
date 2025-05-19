@@ -82,7 +82,7 @@ def get_args():
                         help='Specify the file in which the model is stored')
     parser.add_argument('--batch_size', '-b', dest='batch_size', metavar='B', type=int, default=1, help='Batch size')
     parser.add_argument('--scale', '-s', type=float, default=1, help='Downscaling factor of the images')
-    parser.add_argument('--output', '-o', default='/kaggle/input/exp4444/实验四/Pytorch-UNet-master/data/pred/', help='Filenames of output images')
+    parser.add_argument('--output', '-o', default='/kaggle/working/exp4444/data/pred/', help='Filenames of output images')
     parser.add_argument('--no-save', '-n', action='store_true', help='Do not save the output masks')
     parser.add_argument('--out_threshold', '-t', type=float, default=0.5,
                         help='Minimum probability value to consider a mask pixel white')
