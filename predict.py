@@ -96,7 +96,7 @@ if __name__ == '__main__':
     args = get_args()
     logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 
-    net = UNet(n_channels=1, n_classes=args.classes, bilinear=args.bilinear)
+    net = UNet(n_channels=3, n_classes=args.classes, bilinear=args.bilinear)
     # device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     device = torch.device('cpu')
     logging.info(f'Loading model {args.model}')
