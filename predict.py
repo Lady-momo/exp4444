@@ -77,7 +77,7 @@ def mask_to_image(mask: np.ndarray, mask_values):
 def get_args():
     parser = argparse.ArgumentParser(description='Test the UNet on images and target masks')
     parser.add_argument('--dir_img', default='/kaggle/input/exp4444/实验四/Pytorch-UNet-master/data/test/img/', help='path of input')
-    parser.add_argument('--dir_mask', default=/kaggle/input/exp4444/实验四/Pytorch-UNet-master/data/test/mask/', help='path of mask')
+    parser.add_argument('--dir_mask', default='/kaggle/input/exp4444/实验四/Pytorch-UNet-master/data/test/mask/', help='path of mask')
     parser.add_argument('--model', '-m', default='/kaggle/input/exp4444/实验四/Pytorch-UNet-master/checkpoints/checkpoint_epoch5.pth',
                         help='Specify the file in which the model is stored')
     parser.add_argument('--batch_size', '-b', dest='batch_size', metavar='B', type=int, default=1, help='Batch size')
