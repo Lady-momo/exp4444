@@ -103,7 +103,11 @@ class BasicDataset(Dataset):
         assert len(mask_file) == 1, f'Either no mask or multiple masks found for the ID {name}: {mask_file}'
         mask = load_image(mask_file[0])
         img = load_image(img_file[0])
-
+        
+        img = np.array(img)
+        if img.ndim == 2:  # 单通道图像
+            img = np.stack([img] * 3, axis=-1)  # 转为三通道
+        
         assert img.size == mask.size, \
             f'Image and mask {name} should be the same size, but are {img.size} and {mask.size}'
 
