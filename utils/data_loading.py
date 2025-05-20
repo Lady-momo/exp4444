@@ -6,6 +6,7 @@ from functools import lru_cache
 from functools import partial
 from itertools import repeat
 from multiprocessing import Pool
+import os
 from os import listdir
 from os.path import splitext, isfile, join
 from pathlib import Path
@@ -44,11 +45,14 @@ class BasicDataset(Dataset):
         self.scale = scale
         self.mask_suffix = mask_suffix
 
-        self.ids = [splitext(file)[0] for file in listdir(images_dir) if isfile(join(images_dir, file)) and not file.startswith('.')]
-        if not self.ids:
-            raise RuntimeError(f'No input file found in {images_dir}, make sure you put your images there')
+        # 获取所有图像文件名（包含扩展名）
+        self.image_files = [file for file in os.listdir(images_dir) if os.path.isfile(os.path.join(images_dir, file)) and not file.startswith('.')]
 
-        print(self.ids)
+        # 提取文件名主干（无扩展名）和原始扩展名
+        self.ids = [splitext(f)[0] for f in self.image_files]
+        self.extensions = [splitext(f)[1] for f in self.image_files]
+        if not self.ids:
+            raise RuntimeError(f'No input file found in {images_dir}')
 
         logging.info(f'Creating dataset with {len(self.ids)} examples')
         logging.info('Scanning mask files to determine unique values')
@@ -96,14 +100,17 @@ class BasicDataset(Dataset):
 
     def __getitem__(self, idx):
         name = self.ids[idx]
-        mask_file = list(self.mask_dir.glob(name + self.mask_suffix + '.png'))
-        img_file = list(self.images_dir.glob(name + '.png'))
+        original_ext = self.extensions[idx]  # 获取原始扩展名
 
-        assert len(img_file) == 1, f'Either no image or multiple images found for the ID {name}: {img_file}'
-        assert len(mask_file) == 1, f'Either no mask or multiple masks found for the ID {name}: {mask_file}'
+        # 使用原始扩展名加载图像和掩码
+        img_file = list(self.images_dir.glob(f"{name}{original_ext}"))
+        mask_file = list(self.mask_dir.glob(f"{name}{self.mask_suffix}{original_ext}"))
+
+        assert len(img_file) == 1, f'Expected 1 image file for {name}, found {len(img_file)}'
+        assert len(mask_file) == 1, f'Expected 1 mask file for {name}, found {len(mask_file)}'
         mask = load_image(mask_file[0])
         img = load_image(img_file[0])
-        
+
         assert img.size == mask.size, \
             f'Image and mask {name} should be the same size, but are {img.size} and {mask.size}'
 
@@ -111,9 +118,10 @@ class BasicDataset(Dataset):
         mask = self.preprocess(self.mask_values, mask, self.scale, is_mask=True)
 
         return {
-            'image': torch.as_tensor(img.copy()).float().contiguous(),
-            'mask': torch.as_tensor(mask.copy()).long().contiguous(),
-            'filename': name
+            'image': torch.as_tensor(img),
+            'mask': torch.as_tensor(mask),
+            'filename': name,
+            'extension': original_ext  # 返回原始扩展名
         }
 
 
