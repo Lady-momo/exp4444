@@ -26,6 +26,7 @@ def predict(net, dataloader, device, dir_output, mask_values, out_threshold=0.5)
         images = batch['image']
         true_masks = batch['mask']
         filenames = batch['filename']
+        extensions = batch['extension']  # 新增字段
 
         images = images.to(device=device, dtype=torch.float32)
         true_masks = true_masks.to(device=device, dtype=torch.long)
@@ -51,10 +52,12 @@ def predict(net, dataloader, device, dir_output, mask_values, out_threshold=0.5)
     # TODO 调用mask_to_image()，并保存预测mask图像至dir_output, 命名与数据原始名称相同，如：27.tif
     for i in range(len(filenames)):
         filename = filenames[i]
+        ext = extensions[i]
         pred_mask = mask_pred[i].cpu().numpy()
         img = mask_to_image(pred_mask, mask_values)
-        output_path = Path(dir_output) / f"{filename}.tif"
+        output_path = Path(dir_output) / f"{filename}{ext}"
         img.save(output_path)
+
     return dice_score
 
 def mask_to_image(mask: np.ndarray, mask_values):
@@ -76,13 +79,13 @@ def mask_to_image(mask: np.ndarray, mask_values):
 
 def get_args():
     parser = argparse.ArgumentParser(description='Test the UNet on images and target masks')
-    parser.add_argument('--dir_img', default='/kaggle/input/exp4444/实验四/Pytorch-UNet-master/data/test/img/', help='path of input')
-    parser.add_argument('--dir_mask', default='/kaggle/input/exp4444/实验四/Pytorch-UNet-master/data/test/mask/', help='path of mask')
-    parser.add_argument('--model', '-m', default='/kaggle/input/check-exp444/checkpoint_epoch4.pth',
+    parser.add_argument('--dir_img', default='./data/test/img/', help='path of input')
+    parser.add_argument('--dir_mask', default='./data/test/mask/', help='path of mask')
+    parser.add_argument('--model', '-m', default='./checkpoints/checkpoint_epoch4.pth',
                         help='Specify the file in which the model is stored')
     parser.add_argument('--batch_size', '-b', dest='batch_size', metavar='B', type=int, default=1, help='Batch size')
     parser.add_argument('--scale', '-s', type=float, default=1, help='Downscaling factor of the images')
-    parser.add_argument('--output', '-o', default='/kaggle/working/exp4444/data/pred/', help='Filenames of output images')
+    parser.add_argument('--output', '-o', default='./data/pred/', help='Filenames of output images')
     parser.add_argument('--no-save', '-n', action='store_true', help='Do not save the output masks')
     parser.add_argument('--out_threshold', '-t', type=float, default=0.5,
                         help='Minimum probability value to consider a mask pixel white')
