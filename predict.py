@@ -18,6 +18,9 @@ import pdb
 @torch.inference_mode()
 def predict(net, dataloader, device, dir_output, mask_values, out_threshold=0.5):
     dice_score = 0
+    total_cross_entropy = 0.0
+    total_samples = 0
+
     # TODO 实现对训练好的模型测试，包括数据载入，输入网络进行预测
     net.eval()
     Path(dir_output).mkdir(parents=True, exist_ok=True)
@@ -28,37 +31,44 @@ def predict(net, dataloader, device, dir_output, mask_values, out_threshold=0.5)
         filenames = batch['filename']
         extensions = batch['extension']  # 新增字段
 
-        images = images.to(device=device, dtype=torch.float32)
-        true_masks = true_masks.to(device=device, dtype=torch.long)
+        images = images.to(device)
+        true_masks = true_masks.to(device)
+
+        batch_size = images.size(0)
+        total_samples += batch_size
 
         # 前向传播
         outputs = net(images)
 
         # 计算交叉熵
         cross_entropy = F.cross_entropy(outputs, true_masks)  # 调用交叉熵函数
+        total_cross_entropy += cross_entropy.item() * images.size(0)
 
-    # compute the Dice score, ignoring background
-    true_masks_onehot = F.one_hot(true_masks, net.n_classes).permute(0, 3, 1, 2).float()
-    mask_pred = outputs.argmax(dim=1)
-    mask_pred_onehot = F.one_hot(mask_pred, net.n_classes).permute(0, 3, 1, 2).float()
+        # 计算DICE
+        true_masks_onehot = F.one_hot(true_masks, net.n_classes).permute(0, 3, 1, 2).float()
+        mask_pred = outputs.argmax(dim=1)
+        mask_pred_onehot = F.one_hot(mask_pred, net.n_classes).permute(0, 3, 1, 2).float()
 
-    # TODO 调用dice_coeff()函数计算DICE值，调用F.cross_entropy()函数计算交叉熵cross-entropy值
-    dice = dice_coeff(mask_pred_onehot[:, 1:], true_masks_onehot[:, 1:])
-    dice_score += dice.item()
+        # TODO 调用dice_coeff()函数计算DICE值，调用F.cross_entropy()函数计算交叉熵cross-entropy值
+        dice = dice_coeff(mask_pred_onehot[:, 1:], true_masks_onehot[:, 1:])
+        dice_score += dice.item() * batch_size(0)
 
-    # save prediction mask
-    mask = mask_pred.argmax(dim=1)
-    
-    # TODO 调用mask_to_image()，并保存预测mask图像至dir_output, 命名与数据原始名称相同，如：27.tif
-    for i in range(len(filenames)):
-        filename = filenames[i]
-        ext = extensions[i]
-        pred_mask = mask_pred[i].cpu().numpy()
-        img = mask_to_image(pred_mask, mask_values)
-        output_path = Path(dir_output) / f"{filename}{ext}"
-        img.save(output_path)
+       # TODO 调用mask_to_image()，并保存预测mask图像至dir_output, 命名与数据原始名称相同，如：27.tif
+        # 保存预测结果
+        for i in range(len(filenames)):
+            filename = filenames[i]
+            ext = extensions[i]
+            pred_mask = mask_pred[i].cpu().numpy()  # 直接使用 mask_pred
+            img = mask_to_image(pred_mask, mask_values)
+            output_path = Path(dir_output) / f"{filename}{ext}"
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            img.save(output_path, format='TIFF')
 
-    return dice_score
+    # 计算平均值
+    avg_cross_entropy = total_cross_entropy / total_samples
+    avg_dice = dice_score / total_samples
+
+    return avg_dice,avg_cross_entropy
 
 def mask_to_image(mask: np.ndarray, mask_values):
     if isinstance(mask_values[0], list):
@@ -117,9 +127,10 @@ if __name__ == '__main__':
     print(num)
     loader_args = dict(batch_size=args.batch_size, num_workers=0, pin_memory=True)
     dataloader = DataLoader(dataset, shuffle=True, **loader_args)
-    dice_score = predict(net=net, dataloader=dataloader, dir_output=args.output, out_threshold=args.out_threshold,
+    dice_score, cross_entropy_score = predict(net=net, dataloader=dataloader, dir_output=args.output, out_threshold=args.out_threshold,
                    device=device, mask_values=mask_values)
-    print('Average DICE score on test dataset is:', dice_score/num)
+    print(f'Average DICE score on test dataset: {dice_score:.4f}')
+    print(f'Average Cross-Entropy on test dataset: {cross_entropy_score:.4f}')
 
 
 
