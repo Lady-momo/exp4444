@@ -64,11 +64,11 @@ def predict(net, dataloader, device, dir_output, mask_values, out_threshold=0.5)
             output_path.parent.mkdir(parents=True, exist_ok=True)
             img.save(output_path, format='TIFF')
 
-            # 计算平均值
-            avg_cross_entropy = total_cross_entropy / total_samples
-            avg_dice = dice_score / total_samples
+    # 计算平均值
+    avg_cross_entropy = total_cross_entropy / total_samples
+    avg_dice = dice_score / total_samples
 
-            return avg_dice,avg_cross_entropy
+    return avg_dice,avg_cross_entropy
 
 def mask_to_image(mask: np.ndarray, mask_values):
     if isinstance(mask_values[0], list):
