@@ -53,7 +53,7 @@ def predict(net, dataloader, device, dir_output, mask_values, out_threshold=0.5)
         filename = filenames[i]
         pred_mask = mask_pred[i].cpu().numpy()
         img = mask_to_image(pred_mask, mask_values)
-        output_path = Path(dir_output) / filename
+        output_path = Path(dir_output) / f"{filename}.tif"
         img.save(output_path)
     return dice_score
 
