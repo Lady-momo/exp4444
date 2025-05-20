@@ -51,7 +51,7 @@ def predict(net, dataloader, device, dir_output, mask_values, out_threshold=0.5)
 
         # TODO 调用dice_coeff()函数计算DICE值，调用F.cross_entropy()函数计算交叉熵cross-entropy值
         dice = dice_coeff(mask_pred_onehot[:, 1:], true_masks_onehot[:, 1:])
-        dice_score += dice.item() * batch_size(0)
+        dice_score += dice.item() * images.size(0)
 
        # TODO 调用mask_to_image()，并保存预测mask图像至dir_output, 命名与数据原始名称相同，如：27.tif
         # 保存预测结果
@@ -64,11 +64,11 @@ def predict(net, dataloader, device, dir_output, mask_values, out_threshold=0.5)
             output_path.parent.mkdir(parents=True, exist_ok=True)
             img.save(output_path, format='TIFF')
 
-    # 计算平均值
-    avg_cross_entropy = total_cross_entropy / total_samples
-    avg_dice = dice_score / total_samples
+            # 计算平均值
+            avg_cross_entropy = total_cross_entropy / total_samples
+            avg_dice = dice_score / total_samples
 
-    return avg_dice,avg_cross_entropy
+            return avg_dice,avg_cross_entropy
 
 def mask_to_image(mask: np.ndarray, mask_values):
     if isinstance(mask_values[0], list):
