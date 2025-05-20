@@ -113,7 +113,7 @@ class BasicDataset(Dataset):
         return {
             'image': torch.as_tensor(img.copy()).float().contiguous(),
             'mask': torch.as_tensor(mask.copy()).long().contiguous(),
-            'id': name
+            'filename': name
         }
 
 
