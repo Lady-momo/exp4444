@@ -32,7 +32,7 @@ def predict(net, dataloader, device, dir_output, mask_values, out_threshold=0.5)
         extensions = batch['extension']  # 新增字段
 
         images = images.to(device,dtype=torch.float32)
-        true_masks = true_masks.to(device,dtype=torch.float32)
+        true_masks = true_masks.to(device,dtype=torch.long)
 
         batch_size = images.size(0)
         total_samples += batch_size
