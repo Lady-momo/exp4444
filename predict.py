@@ -42,7 +42,7 @@ def predict(net, dataloader, device, dir_output, mask_values, out_threshold=0.5)
     mask_pred_onehot = F.one_hot(mask_pred, net.n_classes).permute(0, 3, 1, 2).float()
 
     # TODO 调用dice_coeff()函数计算DICE值，调用F.cross_entropy()函数计算交叉熵cross-entropy值
-    dice = dice_coeff(mask_pred_onehot[:, 1:], true_masks_onehot[:, 1:], reduce_batch_first=False)
+    dice = dice_coeff(mask_pred_onehot[:, 1:], true_masks_onehot[:, 1:])
     dice_score += dice.item()
 
     # save prediction mask
