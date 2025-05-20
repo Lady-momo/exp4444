@@ -78,7 +78,7 @@ def get_args():
     parser = argparse.ArgumentParser(description='Test the UNet on images and target masks')
     parser.add_argument('--dir_img', default='/kaggle/input/exp4444/实验四/Pytorch-UNet-master/data/test/img/', help='path of input')
     parser.add_argument('--dir_mask', default='/kaggle/input/exp4444/实验四/Pytorch-UNet-master/data/test/mask/', help='path of mask')
-    parser.add_argument('--model', '-m', default='/kaggle/input/check-exp444/checkpoint_epoch5.pth',
+    parser.add_argument('--model', '-m', default='/kaggle/input/check-exp444/checkpoint_epoch4.pth',
                         help='Specify the file in which the model is stored')
     parser.add_argument('--batch_size', '-b', dest='batch_size', metavar='B', type=int, default=1, help='Batch size')
     parser.add_argument('--scale', '-s', type=float, default=1, help='Downscaling factor of the images')
