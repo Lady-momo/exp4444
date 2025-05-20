@@ -38,11 +38,12 @@ class Down(nn.Module):
         )
 
         # TODO 需要考虑添加注意力机制，注意力机制包括但不限于空间注意力机制、通道注意力机制。
+        #通道注意力
         self.ca = nn.Sequential(
             nn.AdaptiveAvgPool2d(1),
-            nn.Conv2d(out_channels, out_channels//8, 1),
-            nn.ReLU(),
-            nn.Conv2d(out_channels//8, out_channels, 1),
+            nn.Conv2d(out_channels, out_channels // 8, 1, groups=4),
+            nn.GELU(),
+            nn.Conv2d(out_channels // 8, out_channels, 1),
             nn.Sigmoid()
         )
 
@@ -66,8 +67,10 @@ class Up(nn.Module):
             self.conv = DoubleConv(in_channels, out_channels)
 
         # TODO 需要考虑添加注意力机制，注意力机制包括但不限于空间注意力机制、通道注意力机制。
+        #空间注意力
         self.sa = nn.Sequential(
-            nn.Conv2d(2, 1, kernel_size=7, padding=3),
+            nn.Conv2d(2, 1, kernel_size=3, padding=1),
+            nn.BatchNorm2d(1),
             nn.Sigmoid()
         )
 
