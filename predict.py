@@ -25,7 +25,7 @@ def predict(net, dataloader, device, dir_output, mask_values, out_threshold=0.5)
     for batch in tqdm(dataloader, desc='Predicting', unit='batch'):
         images = batch['image']
         true_masks = batch['mask']
-        filenames = batch['filename']
+        id = int(batch['id'][0])
 
         images = images.to(device=device, dtype=torch.float32)
         true_masks = true_masks.to(device=device, dtype=torch.long)
