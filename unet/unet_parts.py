@@ -39,10 +39,7 @@ class Down(nn.Module):
 
 
     def forward(self, x):
-        x = self.maxpool_conv(x)
-        ca_weight = self.ca(x)
-        return x * ca_weight
-
+        return self.maxpool_conv(x)
 
 class Up(nn.Module):
     """Upscaling then double conv"""
@@ -59,21 +56,16 @@ class Up(nn.Module):
 
     def forward(self, x1, x2):
         x1 = self.up(x1)
-        # Handle dimension mismatch
+        # 保持原有的维度对齐操作
         diffY = x2.size()[2] - x1.size()[2]
         diffX = x2.size()[3] - x1.size()[3]
         x1 = F.pad(x1, [diffX // 2, diffX - diffX // 2,
                         diffY // 2, diffY - diffY // 2])
-
-        # Spatial attention
-        avg_out = torch.mean(x1, dim=1, keepdim=True)
-        max_out, _ = torch.max(x1, dim=1, keepdim=True)
-        sa = self.sa(torch.cat([avg_out, max_out], dim=1))
-        x1 = x1 * sa
-
+        
+        # 直接拼接特征图
         x = torch.cat([x2, x1], dim=1)
         return self.conv(x)
-
+        
 class OutConv(nn.Module):
     def __init__(self, in_channels, out_channels):
         super(OutConv, self).__init__()
