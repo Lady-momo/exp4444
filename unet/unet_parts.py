@@ -52,7 +52,6 @@ class Down(nn.Module):
         ca_weight = self.ca(x)
         return x * ca_weight
 
-
 class Up(nn.Module):
     """Upscaling then double conv"""
 
