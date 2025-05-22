@@ -17,7 +17,7 @@ class DoubleConv(nn.Module):
             nn.Conv2d(in_channels, mid_channels, kernel_size=3, padding=1),
             nn.BatchNorm2d(mid_channels),
             nn.ReLU(inplace=True),
-            nn.Conv2d(mid_channels, out_channels, kernel_size=7, padding=3),
+            nn.Conv2d(mid_channels, out_channels, kernel_size=3, padding=1),
             nn.BatchNorm2d(out_channels),
             nn.ReLU(inplace=True)
         )
@@ -37,8 +37,21 @@ class Down(nn.Module):
             DoubleConv(in_channels, out_channels)
         )
 
+        # TODO 需要考虑添加注意力机制，注意力机制包括但不限于空间注意力机制、通道注意力机制。
+        #通道注意力
+        self.ca = nn.Sequential(
+            nn.AdaptiveAvgPool2d(1),
+            nn.Conv2d(out_channels, out_channels // 8, 1, groups=4),
+            nn.GELU(),
+            nn.Conv2d(out_channels // 8, out_channels, 1),
+            nn.Sigmoid()
+        )
+
     def forward(self, x):
-        return self.maxpool_conv(x)
+        x = self.maxpool_conv(x)
+        ca_weight = self.ca(x)
+        return x * ca_weight
+
 
 class Up(nn.Module):
     """Upscaling then double conv"""
@@ -53,15 +66,28 @@ class Up(nn.Module):
             self.up = nn.ConvTranspose2d(in_channels, in_channels//2, kernel_size=2, stride=2)
             self.conv = DoubleConv(in_channels, out_channels)
 
+        # TODO 需要考虑添加注意力机制，注意力机制包括但不限于空间注意力机制、通道注意力机制。
+        #空间注意力
+        self.sa = nn.Sequential(
+            nn.Conv2d(2, 1, kernel_size=3, padding=1),
+            nn.BatchNorm2d(1),
+            nn.Sigmoid()
+        )
+
     def forward(self, x1, x2):
         x1 = self.up(x1)
-        # 保持原有的维度对齐操作
+        # Handle dimension mismatch
         diffY = x2.size()[2] - x1.size()[2]
         diffX = x2.size()[3] - x1.size()[3]
         x1 = F.pad(x1, [diffX // 2, diffX - diffX // 2,
                         diffY // 2, diffY - diffY // 2])
-        
-        # 直接拼接特征图
+
+        # Spatial attention
+        avg_out = torch.mean(x1, dim=1, keepdim=True)
+        max_out, _ = torch.max(x1, dim=1, keepdim=True)
+        sa = self.sa(torch.cat([avg_out, max_out], dim=1))
+        x1 = x1 * sa
+
         x = torch.cat([x2, x1], dim=1)
         return self.conv(x)
 
